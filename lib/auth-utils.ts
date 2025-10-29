@@ -1,0 +1,43 @@
+import { auth } from "./auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+/**
+ * Get the current session in Server Actions or Server Components
+ * Returns null if not authenticated
+ */
+export async function getSession() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  return session;
+}
+
+/**
+ * Get the current user in Server Actions or Server Components
+ * Throws an error if not authenticated (for use in Server Actions)
+ */
+export async function requireAuth() {
+  const session = await getSession();
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  return session.user;
+}
+
+/**
+ * Require authentication in Server Components
+ * Redirects to /login if not authenticated
+ */
+export async function requireAuthPage() {
+  const session = await getSession();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  return session.user;
+}

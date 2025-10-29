@@ -1,33 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Loader2 } from "lucide-react"
-import { generateResponse } from "@/lib/actions/chat"
-import type { Patient, Message as MessageType } from "@/lib/types"
+import { generateResponse, generatePublicResponse } from "@/lib/actions/chat"
+import type { Message as MessageType } from "@/lib/types"
 
 interface ChatInterfaceProps {
-  patient: Patient
+  patientId: string
+  patientName: string
+  isPublic?: boolean // If true, uses public access (no auth required)
 }
 
-export default function ChatInterface({ patient }: ChatInterfaceProps) {
+export default function ChatInterface({ patientId, patientName, isPublic = false }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<MessageType[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [initialized, setInitialized] = useState(false)
-
-  // Initialize with greeting message
-  useEffect(() => {
-    if (!initialized && patient) {
-      const greeting: MessageType = {
-        role: "assistant",
-        content: `Hello, I'm here for my appointment. I've been experiencing ${patient.chiefComplaint.toLowerCase()}. What would you like to know?`,
-      }
-      setMessages([greeting])
-      setInitialized(true)
-    }
-  }, [patient, initialized])
 
   const handleSendMessage = async (input: string) => {
-    if (!input.trim() || !patient) return
+    if (!input.trim() || !patientId) return
 
     const userMessage: MessageType = {
       role: "user",
@@ -40,8 +29,10 @@ export default function ChatInterface({ patient }: ChatInterfaceProps) {
     setIsLoading(true)
 
     try {
-      // Call server action to generate patient response
-      const response = await generateResponse(patient, updatedMessages)
+      // Call appropriate server action based on mode
+      const response = isPublic
+        ? await generatePublicResponse(patientId, updatedMessages)
+        : await generateResponse(patientId, updatedMessages)
 
       const assistantMessage: MessageType = {
         role: "assistant",
@@ -68,8 +59,8 @@ export default function ChatInterface({ patient }: ChatInterfaceProps) {
     <div className="flex flex-col h-full bg-white rounded-lg border">
       {/* Header */}
       <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-white">
-        <h2 className="text-lg font-semibold">Chat with {patient.demographics}</h2>
-        <p className="text-sm text-gray-600">Chief Complaint: {patient.chiefComplaint}</p>
+        <h2 className="text-lg font-semibold">Chat with {patientName}</h2>
+        <p className="text-sm text-gray-600">Begin the medical interview</p>
       </div>
 
       {/* Messages Area */}
