@@ -38,6 +38,17 @@ export default function HomeClient({ patientActors, userName }: HomeClientProps)
     }
   }
 
+  const handlePatientDelete = () => {
+    if (!selectedPatient) return
+
+    // Remove the deleted patient from the list
+    const updatedPatients = patients.filter(p => p.id !== selectedPatient.id)
+    setPatients(updatedPatients)
+
+    // Select the next patient, or null if no patients left
+    setSelectedPatient(updatedPatients.length > 0 ? updatedPatients[0] : null)
+  }
+
   const handleCreatePatient = async () => {
     setIsCreating(true)
     try {
@@ -138,6 +149,7 @@ export default function HomeClient({ patientActors, userName }: HomeClientProps)
                   key={selectedPatient.id}
                   patient={selectedPatient}
                   onUpdate={handlePatientUpdate}
+                  onDelete={handlePatientDelete}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
