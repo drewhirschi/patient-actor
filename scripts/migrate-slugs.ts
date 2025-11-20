@@ -1,6 +1,4 @@
-import { PrismaClient } from '../lib/generated/client'
-
-const prisma = new PrismaClient()
+import prisma from '../lib/prisma'
 
 // Function to create a slug from a name
 function createSlug(name: string): string {

@@ -191,7 +191,9 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
         } catch (error) {
             console.error('Error saving patient:', error)
             setSaveStatus('error')
-            toast.error('Failed to save patient actor')
+            toast.error(
+                error instanceof Error ? error.message : 'Failed to save patient actor'
+            )
             setTimeout(() => setSaveStatus('idle'), 3000)
         } finally {
             setIsSaving(false)
@@ -213,7 +215,9 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
             }
         } catch (error) {
             console.error('Error deleting patient:', error)
-            toast.error('Failed to delete patient actor. Please try again.')
+            toast.error(
+                error instanceof Error ? error.message : 'Failed to delete patient actor. Please try again.'
+            )
         } finally {
             setIsDeleting(false)
         }

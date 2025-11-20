@@ -1,7 +1,11 @@
 import { PrismaClient } from './generated/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 const prismaClientSingleton = () => {
-    return new PrismaClient()
+    const adapter = new PrismaPg({
+        connectionString: process.env.NEON_POSTGRES_PRISMA_URL
+    })
+    return new PrismaClient({ adapter })
 }
 
 declare global {

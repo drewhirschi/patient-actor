@@ -144,7 +144,9 @@ const PatientRubricEditor = forwardRef<PatientRubricEditorRef, PatientRubricEdit
         } catch (error) {
             console.error("Error saving rubric:", error)
             setSaveStatus('error')
-            toast.error("Failed to save rubric")
+            toast.error(
+                error instanceof Error ? error.message : "Failed to save rubric"
+            )
             setTimeout(() => setSaveStatus('idle'), 3000)
         } finally {
             setIsSaving(false)
@@ -162,7 +164,9 @@ const PatientRubricEditor = forwardRef<PatientRubricEditorRef, PatientRubricEdit
             toast.success("Rubric deleted successfully")
         } catch (error) {
             console.error("Error deleting rubric:", error)
-            toast.error("Failed to delete rubric")
+            toast.error(
+                error instanceof Error ? error.message : "Failed to delete rubric"
+            )
         }
     }
 
