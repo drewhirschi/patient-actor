@@ -92,6 +92,7 @@ model PatientActor {
   age      Int
   slug     String  @unique
   isPublic Boolean @default(true)
+  allowSubmissions Boolean @default(true)
 
   // Structured prompt fields
   demographics        String @default("")

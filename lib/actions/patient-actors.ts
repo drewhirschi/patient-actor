@@ -86,6 +86,7 @@ export async function updatePatientActor(
         name?: string
         age?: number
         prompt?: string
+        allowSubmissions?: boolean
         demographics?: string
         chiefComplaint?: string
         medicalHistory?: string

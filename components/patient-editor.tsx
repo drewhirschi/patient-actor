@@ -14,6 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -53,6 +54,7 @@ export interface PatientEditorRef {
 
 const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patient, onUpdate, onDelete, onSaveStateChange }, ref) => {
     const [name, setName] = useState(patient.name)
+    const [allowSubmissions, setAllowSubmissions] = useState(patient.allowSubmissions ?? true)
     const [structuredData, setStructuredData] = useState<StructuredPrompt>(() => ({
         demographics: patient.demographics || '',
         chiefComplaint: patient.chiefComplaint || '',
@@ -92,6 +94,7 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
     // Update state when patient changes
     useEffect(() => {
         setName(patient.name)
+        setAllowSubmissions(patient.allowSubmissions ?? true)
         setStructuredData({
             demographics: patient.demographics || '',
             chiefComplaint: patient.chiefComplaint || '',
@@ -166,6 +169,7 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
             await updatePatientActor(patient.id, {
                 name,
                 age: extractedAge,
+                allowSubmissions,
                 // Save individual structured fields
                 demographics: structuredData.demographics,
                 chiefComplaint: structuredData.chiefComplaint,
@@ -230,6 +234,23 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
             {/* Form Content */}
             <div className="flex-1 overflow-auto p-6">
                 <div className="max-w-5xl mx-auto space-y-8">
+                    {/* Allow Submissions Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="allowSubmissions" className="text-base font-semibold text-gray-900">
+                                Allow Student Submissions
+                            </Label>
+                            <p className="text-sm text-gray-600">
+                                When enabled, students can submit their chat sessions for grading
+                            </p>
+                        </div>
+                        <Switch
+                            id="allowSubmissions"
+                            checked={allowSubmissions}
+                            onCheckedChange={setAllowSubmissions}
+                        />
+                    </div>
+
                     {/* Patient Profile Section */}
                     <div className="space-y-4">
                         <div className="pb-3 border-b">
