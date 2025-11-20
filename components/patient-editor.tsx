@@ -40,6 +40,7 @@ interface PatientEditorProps {
     patient: PatientActor
     onUpdate?: (patient: PatientActor) => void
     onDelete?: () => void
+    onSaveStateChange?: (isSaving: boolean, saveStatus: 'idle' | 'success' | 'error') => void
 }
 
 export interface PatientEditorRef {
@@ -50,7 +51,7 @@ export interface PatientEditorRef {
     saveStatus: 'idle' | 'success' | 'error'
 }
 
-const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patient, onUpdate, onDelete }, ref) => {
+const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patient, onUpdate, onDelete, onSaveStateChange }, ref) => {
     const [name, setName] = useState(patient.name)
     const [structuredData, setStructuredData] = useState<StructuredPrompt>(() => ({
         demographics: patient.demographics || '',
@@ -73,6 +74,11 @@ const PatientEditor = forwardRef<PatientEditorRef, PatientEditorProps>(({ patien
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
+
+    // Notify parent of save state changes
+    useEffect(() => {
+        onSaveStateChange?.(isSaving, saveStatus)
+    }, [isSaving, saveStatus, onSaveStateChange])
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({

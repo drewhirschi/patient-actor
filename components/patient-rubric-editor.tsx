@@ -34,6 +34,8 @@ import {
 
 interface PatientRubricEditorProps {
     patientActorId: string
+    onSaveStateChange?: (isSaving: boolean, saveStatus: 'idle' | 'success' | 'error') => void
+    onCategoriesChange?: (hasCategories: boolean) => void
 }
 
 export interface PatientRubricEditorRef {
@@ -44,13 +46,23 @@ export interface PatientRubricEditorRef {
     hasCategories: boolean
 }
 
-const PatientRubricEditor = forwardRef<PatientRubricEditorRef, PatientRubricEditorProps>(({ patientActorId }, ref) => {
+const PatientRubricEditor = forwardRef<PatientRubricEditorRef, PatientRubricEditorProps>(({ patientActorId, onSaveStateChange, onCategoriesChange }, ref) => {
     const [categories, setCategories] = useState<RubricCategory[]>([])
     const [passingThreshold, setPassingThreshold] = useState<number | undefined>(undefined)
     const [autoGradeEnabled, setAutoGradeEnabled] = useState(true)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+    // Notify parent of save state changes
+    useEffect(() => {
+        onSaveStateChange?.(isSaving, saveStatus)
+    }, [isSaving, saveStatus, onSaveStateChange])
+
+    // Notify parent when categories change
+    useEffect(() => {
+        onCategoriesChange?.(categories.length > 0)
+    }, [categories.length, onCategoriesChange])
 
     // Load existing rubric
     useEffect(() => {

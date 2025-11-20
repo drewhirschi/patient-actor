@@ -34,6 +34,13 @@ export default function PatientWorkspace({
     const patientEditorRef = useRef<PatientEditorRef>(null)
     const rubricEditorRef = useRef<PatientRubricEditorRef>(null)
 
+    // Track save state for buttons to trigger re-renders
+    const [editorIsSaving, setEditorIsSaving] = useState(false)
+    const [editorSaveStatus, setEditorSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    const [rubricIsSaving, setRubricIsSaving] = useState(false)
+    const [rubricSaveStatus, setRubricSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    const [rubricHasCategories, setRubricHasCategories] = useState(false)
+
     // Load submissions when switching to data tab
     useEffect(() => {
         if (activeTab === "data" && (userRole === "instructor" || userRole === "admin")) {
@@ -81,40 +88,39 @@ export default function PatientWorkspace({
     // Render actions based on active tab
     const renderTabActions = () => {
         if (activeTab === "configure") {
-            const editorState = patientEditorRef.current
             return (
                 <>
                     <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => editorState?.handlePreview()}
+                        onClick={() => patientEditorRef.current?.handlePreview()}
                     >
                         <Eye className="h-4 w-4 mr-1" />
                         Preview Prompt
                     </Button>
                     <Button
                         size="sm"
-                        onClick={() => editorState?.handleSave()}
-                        disabled={editorState?.isSaving}
+                        onClick={() => patientEditorRef.current?.handleSave()}
+                        disabled={editorIsSaving}
                         className={
-                            editorState?.saveStatus === 'success'
+                            editorSaveStatus === 'success'
                                 ? 'bg-green-600 hover:bg-green-700'
-                                : editorState?.saveStatus === 'error'
+                                : editorSaveStatus === 'error'
                                     ? 'bg-red-600 hover:bg-red-700'
                                     : ''
                         }
                     >
-                        {editorState?.isSaving ? (
+                        {editorIsSaving ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                 Saving...
                             </>
-                        ) : editorState?.saveStatus === 'success' ? (
+                        ) : editorSaveStatus === 'success' ? (
                             <>
                                 <Check className="h-4 w-4 mr-1" />
                                 Saved
                             </>
-                        ) : editorState?.saveStatus === 'error' ? (
+                        ) : editorSaveStatus === 'error' ? (
                             'Error'
                         ) : (
                             <>
@@ -126,7 +132,7 @@ export default function PatientWorkspace({
                     <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => editorState?.handleDelete()}
+                        onClick={() => patientEditorRef.current?.handleDelete()}
                     >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
@@ -163,14 +169,13 @@ export default function PatientWorkspace({
                 </>
             )
         } else if (activeTab === "rubric") {
-            const rubricState = rubricEditorRef.current
             return (
                 <>
-                    {rubricState?.hasCategories && (
+                    {rubricHasCategories && (
                         <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => rubricState?.handleDelete()}
+                            onClick={() => rubricEditorRef.current?.handleDelete()}
                         >
                             <Trash2 className="h-4 w-4 mr-1" />
                             Clear Rubric
@@ -178,27 +183,27 @@ export default function PatientWorkspace({
                     )}
                     <Button
                         size="sm"
-                        onClick={() => rubricState?.handleSave()}
-                        disabled={rubricState?.isSaving || !rubricState?.hasCategories}
+                        onClick={() => rubricEditorRef.current?.handleSave()}
+                        disabled={rubricIsSaving || !rubricHasCategories}
                         className={
-                            rubricState?.saveStatus === 'success'
+                            rubricSaveStatus === 'success'
                                 ? 'bg-green-600 hover:bg-green-700'
-                                : rubricState?.saveStatus === 'error'
+                                : rubricSaveStatus === 'error'
                                     ? 'bg-red-600 hover:bg-red-700'
                                     : ''
                         }
                     >
-                        {rubricState?.isSaving ? (
+                        {rubricIsSaving ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                 Saving...
                             </>
-                        ) : rubricState?.saveStatus === 'success' ? (
+                        ) : rubricSaveStatus === 'success' ? (
                             <>
                                 <Check className="h-4 w-4 mr-1" />
                                 Saved
                             </>
-                        ) : rubricState?.saveStatus === 'error' ? (
+                        ) : rubricSaveStatus === 'error' ? (
                             'Error'
                         ) : (
                             <>
@@ -267,6 +272,10 @@ export default function PatientWorkspace({
                         patient={patient}
                         onUpdate={onUpdate}
                         onDelete={onDelete}
+                        onSaveStateChange={(isSaving, saveStatus) => {
+                            setEditorIsSaving(isSaving)
+                            setEditorSaveStatus(saveStatus)
+                        }}
                     />
                 </div>
             )}
@@ -287,6 +296,13 @@ export default function PatientWorkspace({
                     <PatientRubricEditor
                         ref={rubricEditorRef}
                         patientActorId={patient.id}
+                        onSaveStateChange={(isSaving, saveStatus) => {
+                            setRubricIsSaving(isSaving)
+                            setRubricSaveStatus(saveStatus)
+                        }}
+                        onCategoriesChange={(hasCategories) => {
+                            setRubricHasCategories(hasCategories)
+                        }}
                     />
                 </div>
             )}
@@ -294,67 +310,67 @@ export default function PatientWorkspace({
             {activeTab === "data" && (userRole === "instructor" || userRole === "admin") && (
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                     <div className="flex-1 overflow-auto p-6">
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold">Student Submissions</h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Submissions for {patient.name}
-                        </p>
-                    </div>
-
-                    {isLoadingSubmissions ? (
-                        <div className="text-center py-12 text-gray-500">
-                            <p>Loading submissions...</p>
-                        </div>
-                    ) : submissions.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
-                            <p className="text-lg font-medium">No submissions yet</p>
-                            <p className="text-sm mt-2">
-                                Student submissions for this patient actor will appear here
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold">Student Submissions</h2>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Submissions for {patient.name}
                             </p>
                         </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {submissions.map((submission) => (
-                                <div
-                                    key={submission.id}
-                                    className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                                    onClick={() => router.push(`/submissions/${submission.id}`)}
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="font-semibold text-lg">
-                                                    {submission.chatSession?.user?.name || "Anonymous"}
-                                                </h3>
-                                                <Badge
-                                                    variant={
-                                                        submission.status === "pending"
-                                                            ? "default"
-                                                            : submission.status === "reviewed"
-                                                                ? "secondary"
-                                                                : "outline"
-                                                    }
-                                                >
-                                                    {submission.status}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-sm text-gray-600">
-                                                {submission.chatSession?.messageCount || 0} messages
-                                            </p>
-                                            <p className="text-xs text-gray-500 mt-2">
-                                                Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
-                                            </p>
-                                            {submission.grade && (
-                                                <p className="text-sm font-medium text-green-600 mt-2">
-                                                    Grade: {submission.grade}
+
+                        {isLoadingSubmissions ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <p>Loading submissions...</p>
+                            </div>
+                        ) : submissions.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <p className="text-lg font-medium">No submissions yet</p>
+                                <p className="text-sm mt-2">
+                                    Student submissions for this patient actor will appear here
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {submissions.map((submission) => (
+                                    <div
+                                        key={submission.id}
+                                        className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                                        onClick={() => router.push(`/submissions/${submission.id}`)}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <h3 className="font-semibold text-lg">
+                                                        {submission.chatSession?.user?.name || "Anonymous"}
+                                                    </h3>
+                                                    <Badge
+                                                        variant={
+                                                            submission.status === "pending"
+                                                                ? "default"
+                                                                : submission.status === "reviewed"
+                                                                    ? "secondary"
+                                                                    : "outline"
+                                                        }
+                                                    >
+                                                        {submission.status}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-sm text-gray-600">
+                                                    {submission.chatSession?.messageCount || 0} messages
                                                 </p>
-                                            )}
+                                                <p className="text-xs text-gray-500 mt-2">
+                                                    Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
+                                                </p>
+                                                {submission.grade && (
+                                                    <p className="text-sm font-medium text-green-600 mt-2">
+                                                        Grade: {submission.grade}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

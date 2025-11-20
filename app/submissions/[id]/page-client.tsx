@@ -12,6 +12,7 @@ import { updateSubmissionFeedback } from "@/lib/actions/sessions"
 import { Loader2, User, Bot, Calendar, MessageSquare, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import type { Message } from "@/lib/types"
+import { toast } from "sonner"
 
 interface SubmissionReviewClientProps {
   session: {
@@ -66,6 +67,7 @@ export default function SubmissionReviewClient({
     try {
       await updateSubmissionFeedback(submittedSession.id, feedback, grade || undefined)
       setSuccessMessage("Feedback saved successfully!")
+      toast.success("Feedback saved successfully!")
       
       // Refresh the page after a delay to show the updated data
       setTimeout(() => {
@@ -73,7 +75,7 @@ export default function SubmissionReviewClient({
       }, 1500)
     } catch (error) {
       console.error("Failed to submit feedback:", error)
-      alert(error instanceof Error ? error.message : "Failed to submit feedback")
+      toast.error(error instanceof Error ? error.message : "Failed to submit feedback")
     } finally {
       setIsSubmitting(false)
     }
