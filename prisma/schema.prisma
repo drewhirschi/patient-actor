@@ -90,9 +90,26 @@ model PatientActor {
   id       String  @id @default(cuid())
   name     String
   age      Int
-  prompt   String
   slug     String  @unique
   isPublic Boolean @default(true)
+
+  // Structured prompt fields
+  demographics        String @default("")
+  chiefComplaint      String @default("")
+  medicalHistory      String @default("")
+  medications         String @default("")
+  socialHistory       String @default("")
+  personality         String @default("")
+  physicalFindings    String @default("")
+  additionalSymptoms  String @default("")
+  revelationLevel     String @default("moderate") // forthcoming, moderate, reserved
+  stayInCharacter     Boolean @default(true)
+  avoidMedicalJargon  Boolean @default(true)
+  provideFeedback     Boolean @default(true)
+  customInstructions  String @default("")
+
+  // Legacy field - kept for backward compatibility during migration
+  prompt String?
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -100,9 +117,11 @@ model PatientActor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chatSessions ChatSession[]
+  chatSessions  ChatSession[]
+  gradingRubric GradingRubric?
 
   @@index([slug])
+  @@map("patient_actor")
 }
 
 model ChatSession {
@@ -140,10 +159,36 @@ model SubmittedSession {
   grade    String? // Optional grade
   feedback String? // Instructor feedback
 
+  // AI Grading fields
+  rubricScores   Json? // Category scores from each LLM
+  aiGrades       Json? // Full AI grading results with reasoning from each model
+  requiresReview Boolean   @default(false) // Flagged if LLMs disagree
+  autoGraded     Boolean   @default(false) // Whether AI grading was used
+  aiGradedAt     DateTime? // When AI grading was performed
+
   submittedAt DateTime  @default(now())
   reviewedAt  DateTime?
 
   @@index([instructorId])
   @@index([status])
+  @@index([requiresReview])
   @@map("submitted_session")
+}
+
+model GradingRubric {
+  id String @id @default(cuid())
+
+  patientActorId String       @unique
+  patientActor   PatientActor @relation(fields: [patientActorId], references: [id], onDelete: Cascade)
+
+  categories       Json // Array of {name, description, maxPoints, criteria}
+  totalPoints      Int
+  passingThreshold Int? // Optional minimum score to pass
+
+  autoGradeEnabled Boolean @default(true) // Toggle AI auto-grading
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("grading_rubric")
 }

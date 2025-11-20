@@ -22,10 +22,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ChatInterfaceProps {
   patientId: string
   patientName: string
+  patientAge?: number
   isPublic?: boolean // If true, uses public access (no auth required)
+  isTestMode?: boolean // If true, hides submission features
 }
 
-export default function ChatInterface({ patientId, patientName, isPublic = false }: ChatInterfaceProps) {
+export default function ChatInterface({ patientId, patientName, patientAge, isPublic = false, isTestMode = false }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<MessageType[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -144,9 +146,9 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg border">
+    <div className="flex-1 flex flex-col bg-white rounded-lg border min-h-0">
       {/* Header */}
-      <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-white">
+      <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Chat with {patientName}</h2>
@@ -165,7 +167,7 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
                 <span>Saved</span>
               </div>
             )}
-            {isAuthenticated && messages.length >= 10 && sessionId && (
+            {!isTestMode && isAuthenticated && messages.length >= 10 && sessionId && (
               <Button onClick={handleOpenSubmitDialog} size="sm" variant="outline">
                 Submit for Grading
               </Button>
@@ -175,8 +177,8 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
       </div>
 
       {/* Login Prompt for Guests */}
-      {showLoginPrompt && !isAuthenticated && (
-        <Alert className="m-4 border-blue-200 bg-blue-50">
+      {!isTestMode && showLoginPrompt && !isAuthenticated && (
+        <Alert className="m-4 border-blue-200 bg-blue-50 flex-shrink-0">
           <AlertDescription className="flex items-center justify-between">
             <span className="text-sm">
               <strong>Sign in</strong> to save your conversation and submit it for grading.
@@ -196,7 +198,7 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 overflow-auto p-4 space-y-4 min-h-0">
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
@@ -221,7 +223,7 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t bg-gray-50">
+      <div className="p-4 border-t bg-gray-50 flex-shrink-0">
         <div className="flex gap-2">
           <input
             type="text"
@@ -235,7 +237,7 @@ export default function ChatInterface({ patientId, patientName, isPublic = false
               }
             }}
             disabled={isLoading}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 bg-white"
           />
           <button
             onClick={() => {

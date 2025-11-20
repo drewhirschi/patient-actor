@@ -284,6 +284,65 @@ export async function getSubmittedSessions() {
 }
 
 /**
+ * Get submissions for a specific patient actor (instructor only)
+ */
+export async function getSubmissionsByPatientActor(patientActorId: string) {
+    try {
+        const authUser = await requireAuth()
+
+        // Get full user from database to check role
+        const user = await prisma.user.findUnique({
+            where: { id: authUser.id },
+        })
+
+        if (!user) {
+            throw new Error("User not found")
+        }
+
+        if (user.role !== "instructor" && user.role !== "admin") {
+            throw new Error("Only instructors can view submitted sessions")
+        }
+
+        const submissions = await prisma.submittedSession.findMany({
+            where: {
+                instructorId: user.id,
+                chatSession: {
+                    patientActorId: patientActorId,
+                },
+            },
+            include: {
+                chatSession: {
+                    include: {
+                        patientActor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                age: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { submittedAt: "desc" },
+        })
+
+        return submissions
+    } catch (error) {
+        console.error("Error fetching submissions by patient actor:", error)
+        throw new Error(
+            error instanceof Error ? error.message : "Failed to fetch submissions"
+        )
+    }
+}
+
+/**
  * Update submission feedback and grade (instructor only)
  */
 export async function updateSubmissionFeedback(

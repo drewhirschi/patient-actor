@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels"
 import { Plus } from "lucide-react"
-import PatientEditor from "@/components/patient-editor"
+import PatientWorkspace from "@/components/patient-workspace"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/auth-client"
 import { createPatientActor } from "@/lib/actions/patient-actors"
@@ -13,9 +13,11 @@ import type { PatientActor } from "@/lib/generated/client"
 interface HomeClientProps {
   patientActors: PatientActor[]
   userName: string | null
+  userRole: string
+  submissions: any[]
 }
 
-export default function HomeClient({ patientActors, userName }: HomeClientProps) {
+export default function HomeClient({ patientActors, userName, userRole, submissions }: HomeClientProps) {
   const router = useRouter()
   const [selectedPatient, setSelectedPatient] = useState<PatientActor | null>(
     patientActors[0] || null
@@ -88,9 +90,9 @@ export default function HomeClient({ patientActors, userName }: HomeClientProps)
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden p-4">
+      <main className="flex-1 p-4 flex flex-col min-h-0">
         {patients.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center flex-1">
             <div className="text-center">
               <p className="text-lg font-medium text-gray-900">No patient actors yet</p>
               <p className="text-sm text-gray-600 mt-2 mb-4">
@@ -106,9 +108,9 @@ export default function HomeClient({ patientActors, userName }: HomeClientProps)
             </div>
           </div>
         ) : (
-          <PanelGroup direction="horizontal" className="rounded-lg border bg-white">
+          <PanelGroup direction="horizontal" className="flex-1 rounded-lg border bg-white">
             {/* Sidebar */}
-            <Panel defaultSize={25} minSize={20} maxSize={35}>
+            <Panel defaultSize={25} minSize={20} maxSize={35} className="h-full">
               <div className="h-full overflow-y-auto p-4 border-r flex flex-col">
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold mb-3">Patient Actors</h2>
@@ -142,23 +144,26 @@ export default function HomeClient({ patientActors, userName }: HomeClientProps)
 
             <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-gray-300 transition-colors" />
 
-            {/* Editor Area */}
+            {/* Workspace Area with Tabs */}
             <Panel defaultSize={75} minSize={65}>
-              {selectedPatient ? (
-                <PatientEditor
-                  key={selectedPatient.id}
-                  patient={selectedPatient}
-                  onUpdate={handlePatientUpdate}
-                  onDelete={handlePatientDelete}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <div className="text-center">
-                    <p className="text-lg font-medium">Select a patient to edit</p>
-                    <p className="text-sm">Choose from the list on the left to start editing</p>
+              <div className="h-full">
+                {selectedPatient ? (
+                  <PatientWorkspace
+                    key={selectedPatient.id}
+                    patient={selectedPatient}
+                    userRole={userRole}
+                    onUpdate={handlePatientUpdate}
+                    onDelete={handlePatientDelete}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
+                      <p className="text-lg font-medium">Select a patient to work with</p>
+                      <p className="text-sm">Choose from the list on the left to start</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </Panel>
           </PanelGroup>
         )}

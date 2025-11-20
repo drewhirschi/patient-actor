@@ -86,6 +86,19 @@ export async function updatePatientActor(
         name?: string
         age?: number
         prompt?: string
+        demographics?: string
+        chiefComplaint?: string
+        medicalHistory?: string
+        medications?: string
+        socialHistory?: string
+        personality?: string
+        physicalFindings?: string
+        additionalSymptoms?: string
+        revelationLevel?: string
+        stayInCharacter?: boolean
+        avoidMedicalJargon?: boolean
+        provideFeedback?: boolean
+        customInstructions?: string
     }
 ) {
     const user = await requireAuth()
