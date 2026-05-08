@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { signUp } from "@/lib/auth-client"
-import { createStarterPatientActor } from "@/lib/actions/patient-actors"
+import { createStarterPatientActorForCurrentUser } from "@/lib/actions/patient-actors"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createAccount } from "@/lib/actions/accounts"
 
 export default function SignUpPage() {
     const router = useRouter()
@@ -42,7 +41,18 @@ export default function SignUpPage() {
         setLoading(true)
 
         try {
-            await createAccount(email, password, name)
+            const result = await signUp.email({ email, password, name })
+            if (result.error) {
+                setError(result.error.message || "Failed to sign up")
+                setLoading(false)
+                return
+            }
+            try {
+                await createStarterPatientActorForCurrentUser()
+            } catch (actorError) {
+                console.error("Failed to create starter patient actor:", actorError)
+            }
+            router.push("/")
         } catch (err) {
             setError("An unexpected error occurred")
             console.error(err)

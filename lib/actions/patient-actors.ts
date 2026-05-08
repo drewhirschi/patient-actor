@@ -160,10 +160,11 @@ export async function getPatientActorBySlug(slug: string) {
     return patientActor
 }
 
-/**
- * Create starter patient actor for new users
- * No authentication required - called right after signup
- */
+export async function createStarterPatientActorForCurrentUser() {
+    const user = await requireAuth()
+    return createStarterPatientActor(user.id)
+}
+
 export async function createStarterPatientActor(userId: string) {
     const starterPrompt = `Philip Walters is a simulated patient actor designed for use in medical training scenarios with MD students. He plays the role of a 55-year-old retired male school principal who presents with concerns about 'slowing down' and his hands shaking when he's not trying to move them. Philip is soft-spoken and slightly withdrawn, exhibiting subtle emotional cues that require students to engage empathetically and attentively. When initially asked about what brings him in, he responds with something similar to my hands are shaky and that's new. Only after asking for more clarification does he provide more details about the tremor but he continues to provide only short sentence or two description at a time.
 
